@@ -4,13 +4,13 @@ import { DateTime } from 'luxon';
 import { PrismaClient } from '@prisma/client';
 import cors from 'cors';
 import routes from './routes';
+import { Container } from './container';
 
 DateTime.local().setZone('America/Sao_Paulo');
 const app = express();
 
-export const prismaClient = new PrismaClient({
-  log: ['query'],
-});
+// initialize DI
+Container.init();
 
 app.use(
   cors({
@@ -20,9 +20,18 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 );
-
-app.listen(process.env.PORT || 3344);
-
+export const prismaClient = new PrismaClient({
+  log: ['query'],
+});
 app.use(express.json());
 
 app.use(routes);
+
+app.listen(process.env.PORT || 3344, () => {
+  console.log(`Server running on port ${process.env.PORT || 3344}`);
+});
+
+process.on('SIGTERM', async () => {
+  await Container.disconnect();
+  process.exit(0);
+});

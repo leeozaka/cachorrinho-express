@@ -1,95 +1,65 @@
-import { PrismaClient, Role } from '@prisma/client';
 import { User } from 'dtos/UserDTO';
+import { Role } from '@prisma/client';
 import { ActivableEntityMixin } from 'interfaces/ActivableEntityInterface';
-import * as bcrypt from 'bcrypt';
+import { UserUtils } from 'utils/UserUtils';
 
-export const prisma = new PrismaClient();
-
-export default class UserModel {
+export default class UserModel implements User {
+  id?: string;
+  cpf: string;
+  name: string;
+  email: string;
+  telephone: string;
+  birthday: Date;
+  password?: string;
+  role: Role;
   isActive: boolean;
   isDeleted: boolean;
-  lastModified: Date;
   createdAt: Date;
+  updatedAt: Date | undefined;
 
-  constructor() {
-    this.isActive = true;
-    this.isDeleted = false;
-    this.lastModified = new Date();
-    this.createdAt = new Date();
+  constructor(data: Partial<User> = {}) {
+    this.id = data.id;
+    this.cpf = data.cpf || '';
+    this.name = data.name || '';
+    this.email = data.email || '';
+    this.telephone = data.telephone || '';
+    this.birthday = data.birthday || new Date();
+    this.password = data.password;
+    this.role = data.role || Role.USER;
+    this.isActive = data.isActive ?? true;
+    this.isDeleted = data.isDeleted ?? false;
+    this.createdAt = data.createdAt || new Date();
+    this.updatedAt = data.updatedAt || undefined;
+  }
+
+  validate(): boolean {
+    return (
+      this.isValidCPF() && this.isValidEmail() && this.isValidPhone() && this.isValidPassword()
+    );
+  }
+
+  private isValidCPF(): boolean {
+    return UserUtils.isValidCPF(this.cpf);
+  }
+
+  private isValidEmail(): boolean {
+    return UserUtils.isValidEmail(this.email);
+  }
+
+  private isValidPhone(): boolean {
+    return UserUtils.isValidPhone(this.telephone);
+  }
+
+  private isValidPassword(): boolean {
+    return this.password ? UserUtils.isValidPassword(this.password) : false;
   }
 
   inactivate = ActivableEntityMixin.inactivate;
   logicalDelete = ActivableEntityMixin.logicalDelete;
   activate = ActivableEntityMixin.activate;
 
-  create = async (user: User) => {
-    user.password = bcrypt.hashSync(user.password!, 12);
-    return await prisma.user.create({
-      data: {
-        cpf: user.cpf,
-        name: user.name,
-        email: user.email,
-        telephone: user.telephone,
-        birthday: user.birthday,
-        password: user.password,
-        isActive: this.isActive,
-        isDeleted: this.isDeleted,
-        createdAt: this.createdAt,
-        modifiedAt: this.createdAt,
-      },
-    });
-  };
-
-  findAll = async (userId?: number) => {
-    return await prisma.user.findMany({
-      where: userId ? { id: userId } : undefined,
-    });
-  };
-
-  findOne = async (userId: number) => {
-    return await prisma.user.findUnique({
-      where: { id: userId },
-    });
-  };
-
-  findByCpf = async (cpf: string) => {
-    return await prisma.user.findUnique({
-      where: { cpf },
-    });
-  };
-
-  delete = async (userId: number) => {
-    const user = await this.findOne(userId);
-    this.logicalDelete();
-
-    return await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        ...user,
-      },
-    });
-  };
-
-  update = async (userId: number, user: User) => {
-    return await prisma.user.update({
-      where: { id: userId },
-      data: {
-        cpf: user.cpf,
-        name: user.name,
-        email: user.email,
-        telephone: user.telephone,
-        birthday: user.birthday,
-        password: user.password,
-        role: user.role as Role,
-      },
-    });
-  };
-
-  updatePassword = async (userId: number, newPassword: string) => {
-    const hashedPassword = bcrypt.hashSync(newPassword, 12);
-    return await prisma.user.update({
-      where: { id: userId },
-      data: { password: hashedPassword },
-    });
-  };
+  toJSON(): Omit<User, 'password'> {
+    const { ...user } = this;
+    return user;
+  }
 }

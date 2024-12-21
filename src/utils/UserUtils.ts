@@ -1,3 +1,5 @@
+import { User } from 'dtos/UserDTO';
+
 export class UserUtils {
   /**
    * Validates a Brazilian phone number
@@ -23,6 +25,7 @@ export class UserUtils {
 
     return true;
   }
+
   /**
    * Validates a Brazilian CPF number
    * @param cpf CPF number to validate
@@ -82,5 +85,16 @@ export class UserUtils {
     const passwordRegex =
       /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[#?!@$%^&*-])[A-Za-z\d#?!@$%^&*-]{8,}$/;
     return passwordRegex.test(password);
+  }
+
+  static validateUserInfo(user: User): boolean | Error {
+    if (!user.password) return false;
+
+    return (
+      this.isValidCPF(user.cpf) &&
+      this.isValidEmail(user.email) &&
+      this.isValidPhone(user.telephone) &&
+      this.isValidPassword(user.password)
+    );
   }
 }

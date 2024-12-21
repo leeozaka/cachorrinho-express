@@ -4,8 +4,6 @@
 export default interface ActivableEntity {
   isActive: boolean;
   isDeleted: boolean;
-  lastModified: Date;
-  createdAt: Date;
 
   /**
    * Sets entity as inactive
@@ -27,21 +25,19 @@ export default interface ActivableEntity {
  * Mixin to implement ActivableEntity methods
  */
 export const ActivableEntityMixin = {
-  inactivate<T extends ActivableEntity>(this: T) {
+  inactivate<T extends ActivableEntity>(this: T): T {
     this.isActive = false;
-    this.lastModified = new Date();
     return this;
   },
 
-  logicalDelete<T extends ActivableEntity>(this: T) {
+  logicalDelete<T extends ActivableEntity>(this: T): T {
+    this.isActive = false;
     this.isDeleted = true;
-    this.lastModified = new Date();
     return this;
   },
 
-  activate<T extends ActivableEntity>(this: T) {
+  activate<T extends ActivableEntity>(this: T): T {
     this.isActive = true;
-    this.lastModified = new Date();
     return this;
   },
 };

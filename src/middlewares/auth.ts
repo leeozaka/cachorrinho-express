@@ -1,76 +1,69 @@
-import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
-import { JWT_SECRET } from 'secret';
-import UserModel from 'models/UserModel';
-import ErrorHandler from 'helpers/ErrorHandler';
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../config/secret';
+import { UserService } from 'services/UserService';
 import { EntityAttribute, EntityType } from 'enums/ErrorTypes';
 import JwtPayload from 'interfaces/JwtPayloadInterface';
+import { ResultAsync, errAsync, okAsync } from 'neverthrow';
 
 /**
  * Authentication middleware to protect routes
- * @throws {ErrorHandler} If token is invalid or user doesn't exist
+ * Validates JWT token and attaches user to request
  */
-export const authenticate = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> => {
-  const errorHandler = new ErrorHandler();
+export const authenticate =
+  (userService: UserService) =>
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const validateToken = (): ResultAsync<string, Error> => {
+      const authHeader = req.headers.authorization;
 
-  try {
-    const authHeader = req.headers.authorization;
+      if (!authHeader?.startsWith('Bearer ')) {
+        return errAsync(new Error('Invalid or missing authentication token'));
+      }
 
-    if (!authHeader?.startsWith('Bearer ')) {
-      throw errorHandler.addError(
-        EntityType.USER,
-        EntityAttribute.TOKEN,
-        401,
-        'Invalid or missing authentication token',
-      );
+      if (!JWT_SECRET) {
+        return errAsync(new Error('JWT secret is not configured'));
+      }
+
+      return okAsync(authHeader.split(' ')[1]);
+    };
+
+    const verifyToken = (token: string): ResultAsync<string, Error> => {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET as string) as JwtPayload;
+        return decoded.userId
+          ? okAsync(decoded.userId)
+          : errAsync(new Error('Invalid token payload'));
+      } catch {
+        return errAsync(new Error('Invalid token'));
+      }
+    };
+
+    const result = await validateToken()
+      .andThen(verifyToken)
+      .andThen((userId) => userService.findOne(userId))
+      .andThen((user) => {
+        if (!user) {
+          return errAsync(new Error('User not found'));
+        }
+        if (req.method !== 'POST' && !req.body.userId) {
+          req.body.userId = user.id;
+        }
+        return okAsync(user);
+      })
+      .map(() => next());
+
+    if (result.isErr()) {
+      const error = result.error;
+      res.status(401).json({
+        errors: [
+          {
+            type: EntityType.USER,
+            attribute: EntityAttribute.TOKEN,
+            message: error.message,
+          },
+        ],
+      });
     }
-
-    const token = authHeader.split(' ')[1];
-    if (!JWT_SECRET) {
-      throw errorHandler.addError(
-        EntityType.USER,
-        EntityAttribute.TOKEN,
-        500,
-        'JWT secret is not configured',
-      );
-    }
-    const decodedToken = jwt.verify(token, JWT_SECRET) as unknown as JwtPayload;
-
-    if (!decodedToken.userId) {
-      throw errorHandler.addError(
-        EntityType.USER,
-        EntityAttribute.TOKEN,
-        401,
-        'Invalid token payload',
-      );
-    }
-
-    const userModel = new UserModel();
-    const user = await userModel.findOne(decodedToken.userId);
-
-    if (!user) {
-      throw errorHandler.addError(EntityType.USER, EntityAttribute.ID, 404, 'User not found');
-    }
-
-    // Attach userId to request body if not POST and userId not present
-    if (req.method !== 'POST' && !req.body.userId) {
-      req.body.userId = decodedToken.userId;
-    }
-
-    next();
-  } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      errorHandler.addError(EntityType.USER, EntityAttribute.TOKEN, 401, 'Invalid token');
-    }
-
-    res.status(errorHandler.getStatus() || 500).json({
-      errors: errorHandler.getErrors(),
-    });
-  }
-};
+  };
 
 export default authenticate;

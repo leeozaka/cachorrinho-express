@@ -1,10 +1,16 @@
 import type { Config } from 'jest';
 
 const config: Config = {
-  verbose: true,
+  preset: 'ts-jest',
   testEnvironment: 'node',
-  testMatch: ['**/*.test.ts'],
-  moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' }
+  moduleNameMapper: {
+    '^controllers/(.*)$': '<rootDir>/src/controllers/$1',
+    '^services/(.*)$': '<rootDir>/src/services/$1',
+    '^interfaces/(.*)$': '<rootDir>/src/interfaces/$1',
+    '^dtos/(.*)$': '<rootDir>/src/dtos/$1'
+  },
+  moduleDirectories: ['node_modules', 'src'],
+  setupFilesAfterEnv: ['<rootDir>/src/tests/setup.ts']
 };
 
 export default config;

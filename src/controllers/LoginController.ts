@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { compareSync } from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import { prismaClient } from '../index';
-import { JWT_SECRET } from '../secret';
+import { JWT_SECRET } from '../config/secret';
 import { StatusCodes } from 'http-status-codes';
 import { LoginRequest, LoginResponse } from '../interfaces/LoginInterface';
 import ErrorHandler from '../helpers/ErrorHandler';

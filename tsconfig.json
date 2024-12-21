@@ -19,7 +19,10 @@
       "routes/*": ["routes/*"],
       "dtos/*": ["dtos/*"],
       "services/*": ["services/*"],
-      "interfaces/*": ["interfaces/*"]
+      "interfaces/*": ["interfaces/*"],
+      "repositories/*": ["repositories/*"],
+      "mapper/*": ["mapper/*"],
+      "secret":["src/config/secret"]
     }
   },
   "include": ["src/**/*.ts"],

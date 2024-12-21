@@ -2,7 +2,7 @@
  * JWT payload structure
  */
 export default interface JwtPayload {
-  userId: number;
+  userId: string;
   iat?: number;
   exp?: number;
 }

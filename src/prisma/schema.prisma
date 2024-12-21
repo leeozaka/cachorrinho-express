@@ -26,7 +26,7 @@ model User {
   address     Address[]
 
   createdAt   DateTime   @default(now())
-  modifiedAt  DateTime?  @updatedAt
+  updatedAt   DateTime   @updatedAt
   isActive    Boolean    @default(true)
   isDeleted   Boolean    @default(false)
 
@@ -48,7 +48,7 @@ model Address {
   address2        String?   @db.VarChar(100)
 
   createdAt       DateTime  @default(now())
-  modifiedAt      DateTime? @updatedAt
+  updatedAt       DateTime  @updatedAt
   isActive        Boolean   @default(true)
   isDeleted       Boolean   @default(false)
 
