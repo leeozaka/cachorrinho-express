@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    container_name: db
+    image: postgres:15
+    restart: always
+    expose:
+      - 5432
+    ports:
+      - 5432:5432
+    networks:
+      - cachorrinho_network
+    environment:
+      - POSTGRES_DB=cachorrinhodb
+      - POSTGRES_USER=salvacao
+      - POSTGRES_PASSWORD=salvacao123
+
+  web:
+    container_name: web
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: yarn dev
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 3344:3344
+      - 5556:5555
+    networks:
+      - cachorrinho_network
+    links:
+      - db
+    env_file:
+      - .env.example
+    platform: 'linux/amd64'
+    depends_on:
+      - db
+    expose:
+      - 5555
+
+networks:
+  cachorrinho_network:
+    driver: bridge
