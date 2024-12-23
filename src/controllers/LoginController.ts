@@ -1,64 +1,32 @@
 import { Request, Response } from 'express';
-import { compareSync } from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
-import { prismaClient } from '../index';
-import { JWT_SECRET } from '../config/secret';
 import { StatusCodes } from 'http-status-codes';
-import { LoginRequest, LoginResponse } from '../interfaces/LoginInterface';
-import ErrorHandler from '../helpers/ErrorHandler';
-import { EntityAttribute, EntityType } from '../enums/ErrorTypes';
+import { LoginRequest } from '../interfaces/LoginInterface';
+import { LoginService } from 'services/LoginService';
 
 /**
  * Controller responsible for handling user authentication
  * @class LoginController
  */
 export class LoginController {
-  private static errorHandler = new ErrorHandler();
+  constructor(private readonly loginService: LoginService) {}
 
   /**
    * Authenticates a user and generates JWT token
-   * @param {Request} req - Express request object
-   * @param {Response} res - Express response object
-   * @returns {Promise<Response>} Login response with user id and token
+   * @param req - Express request object
+   * @param res - Express response object
+   * @param next - Express next function for error handling
+   * @returns Promise<void>
    */
-  public static async authenticate(
+  authenticate = async (
     req: Request<object, object, LoginRequest>,
     res: Response,
-  ): Promise<Response<LoginResponse>> {
-    try {
-      const { cpf, password } = req.body;
+  ): Promise<void> => {
+    const result = await this.loginService.authenticate(req.body);
 
-      const cleanCpf = cpf.replace(/\D/g, '');
-
-      const user = await prismaClient.user.findUnique({
-        where: { cpf: cleanCpf },
-      });
-
-      if (!user || !compareSync(password, user.password)) {
-        throw this.errorHandler.addError(
-          EntityType.USER,
-          EntityAttribute.CREDENTIALS,
-          StatusCodes.UNAUTHORIZED,
-          'Invalid credentials',
-        );
-      }
-
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '8h' });
-
-      return res.status(StatusCodes.OK).json({
-        user: user.id,
-        token,
-      });
-    } catch (error) {
-      if (error instanceof ErrorHandler) {
-        return res.status(error.getErrors()[0].statusCode).json({
-          errors: error.getErrors(),
-        });
-      }
-
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: 'Internal server error',
-      });
+    if (result.isOk()) {
+      res.status(StatusCodes.OK).json(result.value);
+      return;
     }
-  }
+    res.status(StatusCodes.BAD_REQUEST).json(result.error.name);
+  };
 }

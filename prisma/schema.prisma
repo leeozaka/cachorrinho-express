@@ -1,11 +1,59 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  binaryTargets   = ["native", "darwin", "darwin-arm64", "linux-musl", "debian-openssl-3.0.x", "darwin"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+  PET
+}
+
+model User {
+  id          String     @id @default(uuid())
+  name        String     @db.VarChar(100)
+  email       String     @unique @db.VarChar(50)
+  telephone   String     @db.VarChar(20)
+  birthday    DateTime   @db.Date
+  password    String     @db.VarChar(255)
+  cpf         String     @unique @db.Char(11)
+
+  address     Address[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  isActive    Boolean    @default(true)
+  isDeleted   Boolean    @default(false)
+
+  role        Role       @default(USER)
+
+  @@index([email, cpf])
+  @@map("users")
+}
+
+model Address {
+  id              String    @id @default(uuid())
+
+  cep             String    @db.Char(8)
+  street          String    @db.VarChar(100)
+  number          Int       @db.Integer
+  neighbourhood   String    @db.VarChar(100)
+  city            String    @db.VarChar(100)
+  uf              String    @db.Char(2)
+  address2        String?   @db.VarChar(100)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  isActive        Boolean   @default(true)
+  isDeleted       Boolean   @default(false)
+
+  user_id         String
+  user            User      @relation(fields: [user_id], references: [id])
+
+  @@index([cep])
 }

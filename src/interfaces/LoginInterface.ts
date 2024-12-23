@@ -4,6 +4,6 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  user: string;
+  expires: Date;
   token: string;
 }
