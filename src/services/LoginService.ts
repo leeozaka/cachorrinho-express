@@ -50,10 +50,11 @@ export class LoginService {
    */
   private generateToken(userId: string): Result<string, Error> {
     return Result.fromThrowable(
-      () => jwt.sign({userId}, JWT_SECRET!, {
-        expiresIn: '24h'
-      }),
-      (e) => e instanceof Error ? e : new Error('Token generation failed')
+      () =>
+        jwt.sign({ userId }, JWT_SECRET!, {
+          expiresIn: '24h',
+        }),
+      (e) => (e instanceof Error ? e : new Error('Token generation failed')),
     )();
   }
 }

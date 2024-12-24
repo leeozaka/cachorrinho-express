@@ -39,7 +39,7 @@ export default class UserModel implements User {
       this.isValidCPF(),
       this.isValidEmail(),
       this.isValidPhone(),
-      this.isValidPassword()
+      this.isValidPassword(),
     ];
 
     return ResultAsync.combineWithAllErrors(validations)
@@ -48,7 +48,7 @@ export default class UserModel implements User {
   }
 
   private isValidCPF(): ResultAsync<boolean, ValidationError> {
-    return UserUtils.isValidCPF(this.cpf) 
+    return UserUtils.isValidCPF(this.cpf)
       ? okAsync(true)
       : errAsync({ field: 'cpf', message: 'Invalid CPF format' });
   }

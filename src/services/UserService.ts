@@ -26,18 +26,19 @@ export class UserService implements IUserService {
   create(data: CreateUserRequest): ResultAsync<User, ValidationError[] | Error> {
     const userModel = new UserModel(data);
 
-    return userModel.validate()
-      .andThen(() => 
+    return userModel
+      .validate()
+      .andThen(() =>
         ResultAsync.fromPromise(
           hash(data.password!, 12),
-          () => new Error('Failed to hash password')
-        )
+          () => new Error('Failed to hash password'),
+        ),
       )
       .andThen((hashedPassword: string) => {
         userModel.password = hashedPassword;
         return ResultAsync.fromPromise(
           this.userRepository.create(UserMapper.toEntity(userModel)),
-          (error) => new Error(`Failed to create user: ${error}`)
+          (error) => new Error(`Failed to create user: ${error}`),
         );
       });
   }

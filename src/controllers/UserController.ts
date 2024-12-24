@@ -23,13 +23,13 @@ export class UserController {
       })
       .mapErr((error) => {
         if (Array.isArray(error)) {
-          res.status(StatusCodes.BAD_REQUEST).json({ 
+          res.status(StatusCodes.BAD_REQUEST).json({
             message: 'Validation failed',
-            errors: error 
+            errors: error,
           });
         } else {
-          res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
-            message: error.message 
+          res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: error.message,
           });
         }
       });

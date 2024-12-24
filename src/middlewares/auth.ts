@@ -24,21 +24,18 @@ export const authenticate =
       return okAsync(authHeader.split(' ')[1]);
     };
 
-    const verifyToken = (token: string): ResultAsync<string, Error> => 
-      ResultAsync.fromPromise(
-        Promise.resolve(jwt.verify(token, JWT_SECRET as string)),
-        (error) => {
-          if (error instanceof jwt.JsonWebTokenError) {
-            return new Error('Invalid authentication token');
-          }
-          if (error instanceof jwt.TokenExpiredError) {
-            return new Error('Token has expired');
-          }
-          return new Error('Authentication failed');
+    const verifyToken = (token: string): ResultAsync<string, Error> =>
+      ResultAsync.fromPromise(Promise.resolve(jwt.verify(token, JWT_SECRET as string)), (error) => {
+        if (error instanceof jwt.JsonWebTokenError) {
+          return new Error('Invalid authentication token');
         }
-      ).andThen((decoded) => {
+        if (error instanceof jwt.TokenExpiredError) {
+          return new Error('Token has expired');
+        }
+        return new Error('Authentication failed');
+      }).andThen((decoded) => {
         const payload = decoded as JwtPayload;
-        return payload?.userId 
+        return payload?.userId
           ? okAsync(payload.userId)
           : errAsync(new Error('Invalid token payload'));
       });
@@ -54,11 +51,13 @@ export const authenticate =
 
     if (result.isErr()) {
       return res.status(401).json({
-        errors: [{
-          type: EntityType.USER,
-          attribute: EntityAttribute.TOKEN,
-          message: result.error.message || 'Authentication failed',
-        }],
+        errors: [
+          {
+            type: EntityType.USER,
+            attribute: EntityAttribute.TOKEN,
+            message: result.error.message || 'Authentication failed',
+          },
+        ],
       });
     }
 

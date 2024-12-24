@@ -25,7 +25,7 @@ export class UserMapper {
       isActive: user.isActive,
       isDeleted: user.isDeleted,
       createdAt: user.createdAt,
-      updatedAt: user.updatedAt
+      updatedAt: user.updatedAt,
     } as PrismaUser;
   }
 }
