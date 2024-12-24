@@ -14,7 +14,7 @@ export class LoginService {
   authenticate(loginData: LoginRequest): ResultAsync<LoginResponse, Error> {
     return ResultAsync.fromPromise(
       prismaClient.user.findUnique({
-        where: { email: loginData.cpf },
+        where: { email: loginData.email },
       }),
       (error) => new Error(`Database error: ${error}`),
     ).andThen((user) => {

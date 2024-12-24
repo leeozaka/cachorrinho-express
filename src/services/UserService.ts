@@ -1,9 +1,10 @@
 import { CreateUserRequest, IUserRepository, IUserService } from 'interfaces/UserInterface';
-import { UserUtils } from '../utils/UserUtils';
 import { hash } from 'bcrypt';
 import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 import { User } from 'dtos/UserDTO';
 import UserModel from 'models/UserModel';
+import { UserMapper } from 'mapper/UserMapper';
+import { ValidationError } from 'types/ValidationErrorType';
 
 export class UserService implements IUserService {
   constructor(private readonly userRepository: IUserRepository) {}
@@ -20,26 +21,25 @@ export class UserService implements IUserService {
   /**
    * Creates a new user
    * @param data - CreateUserRequest containing user details and password
-   * @returns ResultAsync<User, Error> - Success: Created user, Error: Validation or DB errors
+   * @returns ResultAsync<User, ValidationError[] | Error> - Success: Created user, Error: Validation or DB errors
    */
-  create(data: CreateUserRequest): ResultAsync<User, Error> {
+  create(data: CreateUserRequest): ResultAsync<User, ValidationError[] | Error> {
     const userModel = new UserModel(data);
 
-    if (!userModel.validate()) {
-      return errAsync(new Error('Invalid user data'));
-    }
-
-    return ResultAsync.fromPromise(
-      hash(data.password!, 12),
-      () => new Error('Hash password error'),
-    ).andThen((hashedPassword) => {
-      userModel.password = hashedPassword;
-
-      return ResultAsync.fromPromise(
-        this.userRepository.create(userModel),
-        (error) => new Error(`Failed to create user: ${error}`),
-      );
-    });
+    return userModel.validate()
+      .andThen(() => 
+        ResultAsync.fromPromise(
+          hash(data.password!, 12),
+          () => new Error('Failed to hash password')
+        )
+      )
+      .andThen((hashedPassword: string) => {
+        userModel.password = hashedPassword;
+        return ResultAsync.fromPromise(
+          this.userRepository.create(UserMapper.toEntity(userModel)),
+          (error) => new Error(`Failed to create user: ${error}`)
+        );
+      });
   }
 
   /**
@@ -101,14 +101,10 @@ export class UserService implements IUserService {
 
   /**
    * Finds a single user by ID
-   * @param id - User ID (CPF)
+   * @param id - User ID
    * @returns ResultAsync<User, Error> - Success: User object, Error: Invalid CPF or not found
    */
   findOne(id: string): ResultAsync<User, Error> {
-    if (!UserUtils.isValidCPF(id)) {
-      return errAsync(new Error('Invalid CPF'));
-    }
-
     return ResultAsync.fromPromise(
       this.userRepository.findOne(id),
       () => new Error('Internal server error'),

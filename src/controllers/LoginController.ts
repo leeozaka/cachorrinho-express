@@ -14,7 +14,6 @@ export class LoginController {
    * Authenticates a user and generates JWT token
    * @param req - Express request object
    * @param res - Express response object
-   * @param next - Express next function for error handling
    * @returns Promise<void>
    */
   authenticate = async (

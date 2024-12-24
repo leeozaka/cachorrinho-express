@@ -13,17 +13,25 @@ export class UserController {
    * Creates a new user
    * @param req - Express request with user data in body
    * @param res - Express response object
-   * @param next - Express next function for error handling
    */
-  create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const user = await this.userService.create(req.body);
+  create = async (req: Request, res: Response): Promise<void> => {
+    const result = await this.userService.create(req.body);
 
-    user
-      .map((responseData) => {
-        res.status(StatusCodes.OK).json(responseData);
+    result
+      .map((user) => {
+        res.status(StatusCodes.CREATED).json(user);
       })
-      .map((errorInstance) => {
-        next(errorInstance);
+      .mapErr((error) => {
+        if (Array.isArray(error)) {
+          res.status(StatusCodes.BAD_REQUEST).json({ 
+            message: 'Validation failed',
+            errors: error 
+          });
+        } else {
+          res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
+            message: error.message 
+          });
+        }
       });
   };
 
@@ -34,13 +42,15 @@ export class UserController {
    * @param next - Express next function for error handling
    */
   findOne = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const id = req.query.id;
+    const id = req.query.id || req.body.userId;
     if (typeof id !== 'string') {
       next(new Error('Invalid ID parameter'));
       return;
     }
 
-    const user = await this.userService.findOne(id);
+    console.log(id);
+
+    const user = await this.userService.findOne(id as string);
 
     user
       .map((responseData) => {

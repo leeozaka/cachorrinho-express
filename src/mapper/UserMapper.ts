@@ -14,7 +14,18 @@ export class UserMapper {
 
   static toEntity(user: User): PrismaUser {
     return {
-      ...user,
+      id: user.id,
+      cpf: user.cpf,
+      name: user.name,
+      email: user.email,
+      telephone: user.telephone,
+      birthday: user.birthday,
+      password: user.password,
+      role: user.role,
+      isActive: user.isActive,
+      isDeleted: user.isDeleted,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
     } as PrismaUser;
   }
 }

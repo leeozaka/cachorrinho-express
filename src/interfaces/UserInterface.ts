@@ -1,4 +1,5 @@
 import { User } from 'dtos/UserDTO';
+import { ValidationError } from 'types/ValidationErrorType';
 import { ResultAsync } from 'neverthrow';
 
 export interface CreateUserRequest {
@@ -23,7 +24,7 @@ export interface IUserRepository {
 }
 
 export interface IUserService {
-  create(data: CreateUserRequest): ResultAsync<User, Error>;
+  create(data: CreateUserRequest): ResultAsync<User, ValidationError[] | Error>;
   findOne(id: string): ResultAsync<User, Error>;
   findAll(filter?: Partial<User>): ResultAsync<User[], Error>;
   update(id: string, data: Partial<User>): ResultAsync<User, Error>;
