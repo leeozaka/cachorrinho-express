@@ -1,18 +1,15 @@
 
-# Cachorrinho-Express APi
+# Cachorrinho-Express API
 
-A REST API built with Express.js and TypeScript  with authentication and authorization.
+A REST API built with Express.js and TypeScript with JWT-based authentication.
 
 ## Features
 
-- User CRUD operations
+- User CRUD
 - Authentication using JWT
-- Role-based authorization
-- Address management
-- Brazilian CPF validation
+- Brazilian CPF, phone, and email validation
 - Password encryption
-- Error handling with custom types
-- TypeScript support
+- Error handling with `neverthrow`
 - PostgreSQL database with Prisma ORM
 - Docker support
 
@@ -20,8 +17,8 @@ A REST API built with Express.js and TypeScript  with authentication and authori
 
 - Node.js 18+
 - PostgreSQL 15
-- Docker (optional)
-- Yarn package manager
+- Yarn
+- (Optional) Docker
 
 ## Installation
 
@@ -62,47 +59,35 @@ docker-compose up
 
 ### Without Docker
 
-1. Start the development server:
+1. Start the dev server:
 ```bash
 yarn dev
 ```
-
-2. The server will be running at `http://localhost:3344`
-
-## Testing
-
-Run the test suite:
-
-```bash
-yarn test
-```
+2. App runs at `http://localhost:3344`.
 
 ## API Endpoints
 
-### Users
-- `POST /user` - Create new user
-- `GET /user/:id` - Get user by ID
-- `PUT /user` - Update user
-- `DELETE /user` - Delete user (soft delete)
+### User
+- `POST /user` (create user)
+- `GET /user` (find user by `req.body.userId` or `?id=`)
+- `PUT /user` (update user)
+- `DELETE /user` (soft-delete user)
+
+### Authentication
+- `POST /login` (authenticate user)
+
+## Project Structure
 
 ### Authentication
 - `POST /login` - User login
-
-### Address
-- `POST /address/create` - Create address
-- `GET /address` - Get all addresses
-- `GET /address/me` - Get user's addresses
-- `PUT /address/:id` - Update address
-- `DELETE /address/:id` - Delete address
-- `DELETE /address/all` - Delete all addresses
 
 ## Project Structure
 
 ```
 src/
-├── @types/         # Type definitions
+├── @types/        # Type definitions
 ├── config/         # Configuration files
-├── controllers/    # Route controllers
+├── controllers/   # Route controllers
 ├── dtos/          # Data Transfer Objects
 ├── enums/         # Enumerations
 ├── helpers/       # Helper functions
@@ -131,15 +116,6 @@ src/
 This project is licensed under the MIT License - see the LICENSE file for details.
 ```
 
-This README provides a comprehensive overview of the project structure, setup instructions, available endpoints, and contribution guidelines based on the codebase. The structure reflects the actual organization of your project and includes the key features implemented in your code.
-
-You can add more sections as needed, such as:
-- Detailed API documentation
-- Environment variable descriptions
-- Deployment instructions
-- Troubleshooting guide
-- Performance considerations
-- Security recommendations
 This README provides a comprehensive overview of the project structure, setup instructions, available endpoints, and contribution guidelines based on the codebase. The structure reflects the actual organization of your project and includes the key features implemented in your code.
 
 You can add more sections as needed, such as:
