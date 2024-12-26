@@ -37,7 +37,7 @@ export class UserController {
    * @param res - Express response object
    */
   findOne = async (req: Request, res: Response): Promise<void> => {
-    const id = req.query.id || req.body.userId;
+    const id = req.query.id || req.body.id;
 
     if (typeof id !== 'string') {
       res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid ID parameter' });
@@ -75,7 +75,7 @@ export class UserController {
    * @param res - Express response object
    */
   update = async (req: Request, res: Response): Promise<void> => {
-    const user = await this.userService.update(req.body.userId, req.body);
+    const user = await this.userService.update(req.body.id, req.body);
 
     if (user.isErr()) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: user.error });

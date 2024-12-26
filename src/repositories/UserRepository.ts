@@ -95,9 +95,8 @@ export class UserRepository implements IUserRepository {
       this.prisma.user.findUnique({ where: { cpf, isDeleted: false } }),
       (error) => new Error('Error finding by CPF: ' + error),
     ).andThen((user) => {
-      if (!user) 
-        return errAsync(new Error('User not found'));
-      
+      if (!user) return errAsync(new Error('User not found'));
+
       return okAsync(UserMapper.toDomain(user));
     });
   }

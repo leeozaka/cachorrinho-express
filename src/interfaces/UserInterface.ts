@@ -27,7 +27,7 @@ export interface IUserService {
   create(data: CreateUserRequest): ResultAsync<User, ValidationError[] | Error>;
   findOne(id: string): ResultAsync<User, Error>;
   findAll(filter?: Partial<User>): ResultAsync<User[], Error>;
-  update(id: string, data: Partial<User>): ResultAsync<User, Error>;
+  update(id: string, data: Partial<User>): Promise<ResultAsync<User, Error>>;
   delete(id: string): ResultAsync<boolean, Error>;
   findByCpf(cpf: string): ResultAsync<User, Error>;
 }

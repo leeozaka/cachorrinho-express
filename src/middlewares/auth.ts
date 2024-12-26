@@ -45,7 +45,7 @@ export const authenticate =
       .andThen((userId) => userService.findOne(userId))
       .andThen((user) => {
         if (!user) return errAsync(new Error('User not found'));
-        if (req.method !== 'POST' && !req.body.userId) req.body.userId = user.id;
+        if (req.method !== 'POST' && !req.body.id) req.body.id= user.id;
         return okAsync(user);
       });
 
