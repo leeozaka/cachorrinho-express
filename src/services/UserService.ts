@@ -10,18 +10,18 @@ export class UserService implements IUserService {
   constructor(private readonly userRepository: IUserRepository) {}
 
   /**
-   * Finds a user by their CPF (Brazilian tax ID)
-   * @param cpf - The CPF to search for
-   * @returns ResultAsync<User, Error> - Success: User object, Error: Not implemented
+   * Finds a user by CPF. Returns a ResultAsync with the user or an error if not found.
+   * @param {string} cpf - The user's CPF
+   * @returns {ResultAsync<User, Error>}
    */
   findByCpf(cpf: string): ResultAsync<User, Error> {
-    throw new Error('Method not implemented.' + cpf);
+    return this.userRepository.findByCpf(cpf);
   }
 
   /**
-   * Creates a new user
-   * @param data - CreateUserRequest containing user details and password
-   * @returns ResultAsync<User, ValidationError[] | Error> - Success: Created user, Error: Validation or DB errors
+   * Creates a new user. Returns a ResultAsync with the created user or validation/DB errors.
+   * @param {CreateUserRequest} data - The input data for user creation
+   * @returns {ResultAsync<User, ValidationError[] | Error>}
    */
   create(data: CreateUserRequest): ResultAsync<User, ValidationError[] | Error> {
     const userModel = new UserModel(data);
@@ -36,51 +36,29 @@ export class UserService implements IUserService {
       )
       .andThen((hashedPassword: string) => {
         userModel.password = hashedPassword;
-        return ResultAsync.fromPromise(
-          this.userRepository.create(UserMapper.toEntity(userModel)),
-          (error) => new Error(`Failed to create user: ${error}`),
-        );
+        return this.userRepository.create(UserMapper.toEntity(userModel));
       });
   }
 
   /**
-   * Updates an existing user
-   * @param id - User ID to update
-   * @param data - Partial User object with fields to update
-   * @returns ResultAsync<User, Error> - Success: Updated user, Error: Not found or DB errors
+   * Updates a user by ID. Returns a ResultAsync with the updated user or an error if not found.
+   * @param {string} id - The user's unique ID
+   * @param {Partial<User>} data - Fields to update
+   * @returns {ResultAsync<User, Error>}
    */
   update(id: string, data: Partial<User>): ResultAsync<User, Error> {
-    const user = ResultAsync.fromPromise(
-      this.userRepository.findOne(id),
-      () => new Error('User not found'),
-    );
-
-    return user.andThen(() => {
-      return ResultAsync.fromPromise(
-        this.userRepository.update(id, data),
-        () => new Error('Database error'),
-      );
-    });
+    return this.userRepository
+      .update(id, data)
+      .andThen((user) => (user ? okAsync(user) : errAsync(new Error('User not found'))));
   }
 
   /**
-   * Performs a logical deletion of a user
-   * @param id - User ID to delete
-   * @returns ResultAsync<boolean, Error> - Success: true, Error: Not found or deletion failed
+   * Soft deletes a user. Returns a ResultAsync with true or an error if not found.
+   * @param {string} id - The user's unique ID
+   * @returns {ResultAsync<boolean, Error>}
    */
   delete(id: string): ResultAsync<boolean, Error> {
-    return ResultAsync.fromPromise(
-      this.userRepository.findOne(id),
-      () => new Error('User not found'),
-    ).andThen((user) => {
-      const userToDelete = new UserModel(user);
-      userToDelete.logicalDelete();
-
-      return ResultAsync.fromPromise(
-        this.userRepository.update(id, userToDelete),
-        () => new Error('Failed to delete user'),
-      ).map(() => true);
-    });
+    return this.userRepository.delete(id);
   }
 
   // async changePassword(id: string, oldPassword: string, newPassword: string): Promise<void> {
@@ -101,29 +79,20 @@ export class UserService implements IUserService {
   // }
 
   /**
-   * Finds a single user by ID
-   * @param id - User ID
-   * @returns ResultAsync<User, Error> - Success: User object, Error: Invalid CPF or not found
+   * Finds a user by ID. Returns a ResultAsync with the user or an error if not found.
+   * @param {string} id - The user's unique ID
+   * @returns {ResultAsync<User, Error>}
    */
   findOne(id: string): ResultAsync<User, Error> {
-    return ResultAsync.fromPromise(
-      this.userRepository.findOne(id),
-      () => new Error('Internal server error'),
-    ).andThen((user) => {
-      if (!user) return errAsync(new Error('User not found'));
-      return okAsync(user);
-    });
+    return this.userRepository.findOne(id);
   }
 
   /**
-   * Retrieves all users with optional filtering
-   * @param filter - Optional partial User object for filtering results
-   * @returns ResultAsync<User[], Error> - Success: Array of users, Error: Server error
+   * Retrieves all users matching an optional filter. Returns a ResultAsync with an array of users or an error.
+   * @param {Partial<User>} [filter] - Optional filtering criteria
+   * @returns {ResultAsync<User[], Error>}
    */
   findAll(filter?: Partial<User>): ResultAsync<User[], Error> {
-    return ResultAsync.fromPromise(
-      this.userRepository.findAll(filter),
-      () => new Error('Internal Server Error'),
-    );
+    return this.userRepository.findAll(filter);
   }
 }

@@ -1,12 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
-import { DateTime } from 'luxon';
 import { PrismaClient } from '@prisma/client';
 import cors from 'cors';
 import routes from './routes';
 import { Container } from './container';
 
-DateTime.local().setZone('America/Sao_Paulo');
 const app = express();
 
 // initialize DI

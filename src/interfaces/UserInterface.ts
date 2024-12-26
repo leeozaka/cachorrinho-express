@@ -15,12 +15,12 @@ export enum UserRole {
 }
 
 export interface IUserRepository {
-  create(data: User): Promise<User>;
-  findOne(id: string): Promise<User>;
-  findAll(filter?: Partial<User>): Promise<User[]>;
-  update(id: string, data: Partial<User>): Promise<User>;
-  delete(id: string): Promise<void>;
-  findByCpf(cpf: string): Promise<User | null>;
+  create(data: User): ResultAsync<User, Error>;
+  findOne(id: string): ResultAsync<User, Error>;
+  findAll(filter?: Partial<User>): ResultAsync<User[], Error>;
+  update(id: string, data: Partial<User>): ResultAsync<User, Error>;
+  delete(id: string): ResultAsync<boolean, Error>;
+  findByCpf(cpf: string): ResultAsync<User, Error>;
 }
 
 export interface IUserService {

@@ -22,7 +22,6 @@
     "express": "^4.21.2",
     "http-status-codes": "^2.3.0",
     "jsonwebtoken": "^9.0.2",
-    "luxon": "^3.5.0",
     "neverthrow": "^8.1.1"
   },
   "devDependencies": {
@@ -31,7 +30,6 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.7",
-    "@types/luxon": "^3.4.2",
     "@types/node": "^20.11.24",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
     "@typescript-eslint/parser": "^8.18.1",

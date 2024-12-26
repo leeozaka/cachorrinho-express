@@ -48,8 +48,6 @@ export class UserController {
       return;
     }
 
-    console.log(id);
-
     const user = await this.userService.findOne(id as string);
 
     user
