@@ -93,20 +93,12 @@ export class UserRepository implements IUserRepository {
   findByCpf(cpf: string): ResultAsync<User, Error> {
     return ResultAsync.fromPromise(
       this.prisma.user.findUnique({ where: { cpf, isDeleted: false } }),
-      (error) => {
-        return new Error('Error finding by CPF: ' + error);
-      },
+      (error) => new Error('Error finding by CPF: ' + error),
     ).andThen((user) => {
-      if (!user) {
-        return ResultAsync.fromPromise(
-          Promise.reject(new Error('User not found')),
-          (error) => error as Error,
-        );
-      }
-      return ResultAsync.fromPromise(
-        Promise.resolve(UserMapper.toDomain(user)),
-        (error) => error as Error,
-      );
+      if (!user) 
+        return errAsync(new Error('User not found'));
+      
+      return okAsync(UserMapper.toDomain(user));
     });
   }
 }

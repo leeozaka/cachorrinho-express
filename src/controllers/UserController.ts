@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { UserService } from 'services/UserService';
 
@@ -17,147 +17,87 @@ export class UserController {
   create = async (req: Request, res: Response): Promise<void> => {
     const result = await this.userService.create(req.body);
 
-    result
-      .map((user) => {
-        res.status(StatusCodes.CREATED).json(user);
-      })
-      .mapErr((error) => {
-        if (Array.isArray(error)) {
-          res.status(StatusCodes.BAD_REQUEST).json({
-            message: 'Validation failed',
-            errors: error,
-          });
-        } else {
-          res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: error.message,
-          });
-        }
-      });
+    if (result.isErr()) {
+      if (Array.isArray(result.error)) {
+        res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ message: 'Validation failed', errors: result.error });
+      } else {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: result.error.message });
+      }
+      return;
+    }
+
+    res.status(StatusCodes.CREATED).json(result.value);
   };
 
   /**
    * Retrieves a single user by ID
-   * @param req - Express request with user ID in params
+   * @param req - Express request with user ID in params or body
    * @param res - Express response object
-   * @param next - Express next function for error handling
    */
-  findOne = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  findOne = async (req: Request, res: Response): Promise<void> => {
     const id = req.query.id || req.body.userId;
+
     if (typeof id !== 'string') {
-      next(new Error('Invalid ID parameter'));
+      res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid ID parameter' });
       return;
     }
 
     const user = await this.userService.findOne(id as string);
 
-    user
-      .map((responseData) => {
-        res.status(StatusCodes.OK).json(responseData);
-      })
-      .mapErr((errorInstance) => {
-        next(errorInstance);
-      });
+    if (user.isErr()) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: user.error.message });
+      return;
+    }
+
+    res.status(StatusCodes.OK).json(user.value);
   };
 
   /**
    * Retrieves all users with optional filtering
    * @param req - Express request with optional filter in body
    * @param res - Express response object
-   * @param next - Express next function for error handling
    */
-  findAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  findAll = async (req: Request, res: Response): Promise<void> => {
     const users = await this.userService.findAll(req.body.userId);
 
     if (users.isErr()) {
-      next(users.error);
-    } else {
-      res.status(200).json(users);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: users.error.message });
     }
+
+    res.status(StatusCodes.OK).json(users);
   };
 
   /**
    * Updates an existing user
    * @param req - Express request with user ID and update data in body
    * @param res - Express response object
-   * @param next - Express next function for error handling
    */
-  update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const user = await this.userService.update(req.body.userId, req.body);
-      res.status(200).json(user);
-    } catch (error) {
-      next(error);
+  update = async (req: Request, res: Response): Promise<void> => {
+    const user = await this.userService.update(req.body.userId, req.body);
+
+    if (user.isErr()) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: user.error });
+      return;
     }
+
+    res.status(StatusCodes.OK).json(user);
   };
 
   /**
    * Performs a logical deletion of a user
    * @param req - Express request with user ID in body
    * @param res - Express response object
-   * @param next - Express next function for error handling
    */
-  delete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  delete = async (req: Request, res: Response): Promise<void> => {
     const result = await this.userService.delete(req.body.userId);
 
-    result
-      .map(() => {
-        res.status(StatusCodes.NO_CONTENT).send();
-      })
-      .mapErr((error) => {
-        next(error);
-      });
+    if (result.isErr()) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: result.error.message });
+      return;
+    }
+
+    res.status(StatusCodes.NO_CONTENT).send();
   };
-
-  // getProfile = async (req: Request, res: Response) => {
-  //   const userId = req.body.userId;
-  //   const address = await addressModel.findByUser(userId);
-  //   const user = await this.userService.findOne(userId);
-  //   const { name, email, telephone, birthday } = user!;
-
-  //   return res.json({ name, email, telephone, birthday, address });
-  // };
-
-  // changePassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  //   try {
-  //     await this.userService.changePassword(
-  //       req.body.userId,
-  //       req.body.oldPassword,
-  //       req.body.newPassword,
-  //     );
-  //     res.status(204).send();
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // };
-
-  // forgotPassword = async (req: Request, res: Response) => {
-  //   try {
-  //     const user = await this.userService.findByCpf(req.body.cpf);
-  //     if (!user) {
-  //       throw errors.addError(Table.User, Field.Password, 404, 'User not found');
-  //     }
-  //     if (user.email !== req.body.email) {
-  //       throw errors.addError(Table.User, Field.Password, 400, 'Incorrect email');
-  //     }
-  //     if (user.birthday !== req.body.birthday) {
-  //       throw errors.addError(Table.User, Field.Birthday, 400, 'Incorrect birth date');
-  //     }
-  //     if (!userUtils.isValidPassword(req.body.newPassword)) {
-  //       throw errors.addError(Table.User, Field.Password, 400, 'Invalid password');
-  //     }
-
-  //     const updatedUser = await this.userService.updatePassword(user.id, req.body.newPassword);
-
-  //     if (updatedUser) {
-  //       res.status(200).send({
-  //         message: 'Password successfully reset',
-  //       });
-  //     } else {
-  //       throw errors.addError(Table.User, Field.Password, 500, 'Password not updated');
-  //     }
-  //   } catch (e) {
-  //     const error = errors.getErrors();
-  //     res.status(400).send({ error });
-  //   }
-  // };
 }
