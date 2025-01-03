@@ -46,12 +46,10 @@ export class UserService implements IUserService {
    * @param {Partial<User>} data - Fields to update
    * @returns {ResultAsync<User, Error>}
    */
-  async update (id: string, data: Partial<User>): Promise<ResultAsync<User, Error>> {
-    const r = await this.userRepository
+  async update(id: string, data: Partial<User>): Promise<ResultAsync<User, Error>> {
+    return await this.userRepository
       .update(id, data)
       .andThen((user) => (user ? okAsync(user) : errAsync(new Error('User not found'))));
-      console.log(r);
-      return r;
   }
 
   /**
